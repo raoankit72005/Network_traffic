@@ -1,20 +1,58 @@
 # Network Traffic Classification
 
-Classify UNSW-NB15 traffic as normal or malicious using Logistic Regression, Random Forest, XGBoost and LightGBM. Compare models using malicious-class F1, with visualizations and separate validation/test evaluation.
+This project uses machine learning to identify potentially malicious network traffic in the **UNSW-NB15** dataset. Each row represents a network flow, described by features such as duration, protocol and byte counts. The target is binary: **0 = normal**, **1 = malicious**. This is flow classification, not packet capture or a live intrusion detection service.
 
-[Open notebook in Google Colab](https://colab.research.google.com/github/raoankit72005/Network_traffic/blob/main/UNSW_NB15_Classical_ML.ipynb)
+The project compares **Logistic Regression, Random Forest, XGBoost and LightGBM**. Models learn patterns from labelled training data, and malicious-class F1 is used to select a model on a separate validation portion. F1 balances precision (how many flagged flows are attacks) and recall (how many attacks are detected).
 
-## Run
-1. Open the notebook in Colab.
-2. Download both Excel files from `data/`.
-3. Run the cells in order and upload both datasets when prompted.
-4. Download the results ZIP produced by the final cell.
+## Start here: beginner notebook
 
-The notebook includes preprocessing, exploratory plots, duplicate-aware validation, model comparisons and a saved prediction pipeline. Full training has not been run in this repository; metrics are generated when the notebook runs.
+[Open the beginner notebook in Google Colab](https://colab.research.google.com/github/raoankit72005/Network_traffic/blob/main/UNSW_NB15_Beginner_Colab.ipynb)
 
-## Dataset
-The two Excel workbooks are the user-supplied UNSW-NB15 prepared splits (175,341 training records and 82,332 test records). Their contents are unchanged; the training filename has been normalized.
+`UNSW_NB15_Beginner_Colab.ipynb` explains every stage in Markdown and uses small, sequential code cells with meaningful variable names. It includes:
+
+- CSV or Excel loading from your computer or Google Drive.
+- A class-balance plot and simple data checks.
+- Explanations of features, labels, missing values, scaling and one-hot encoding.
+- Separate training cells for each of the four models.
+- A validation comparison table and graph.
+- Final testing of the selected model, a confusion matrix and an overlap check.
+- A downloadable ZIP containing the fitted model, metrics, predictions and graphs.
+
+### Run on Colab
+
+1. Open the beginner notebook using the link above. A CPU runtime is sufficient.
+2. Obtain the prepared UNSW-NB15 training and testing files. **Dataset files are not included in this repository; there is no `data/` folder to download.**
+3. Run cells from top to bottom, including the installation cell.
+4. In section 2, use `DATA_SOURCE = "upload"` and select both files together, with `training` and `testing` in their respective filenames. Alternatively, use `DATA_SOURCE = "drive"` and edit `TRAIN_PATH` and `TEST_PATH` to point to files in your Google Drive.
+5. Continue through training, validation comparison and final evaluation.
+6. Download `beginner_results.zip` before the Colab session ends.
+
+Prefer CSV if available: it is usually quicker to parse than Excel. Keeping files in Drive avoids repeated browser uploads. Pandas reads the table after transfer; switching away from pandas does not itself speed up the upload.
+
+Both files must have matching columns and a binary `label` column. Use the prepared feature-table splits, not raw packet files. The commonly distributed prepared splits contain 175,341 training rows and 82,332 testing rows; the notebook prints your actual dimensions.
+
+### Understanding training settings
+
+These are classical models, so there is no neural-network `epochs` setting. Edit `n_estimators` in the tree model cells to change the number of trees, `max_depth` or `num_leaves` for complexity, and `max_iter` for Logistic Regression's optimization limit. The beginner notebook uses smaller tree counts than the original for a practical starting point on Colab CPU. Runtime depends on the data and allocated resources.
+
+## Evaluation and leakage prevention
+
+`label`, `attack_cat` and `id` are excluded from model inputs. `attack_cat` reveals the answer and would leak target information. Identical predictor rows stay together in the training/validation split. Imputation, scaling and encoding are fitted inside pipelines using only training data.
+
+The winner is chosen by validation F1, refitted on all supplied training records, and evaluated on the separate test set. Exact predictor overlap between training and test is reported, with a non-overlapping test F1 when both classes are available. Do not repeatedly tune on test scores. Offline benchmark results do not establish reliable detection on live networks or unseen attack families.
+
+## Original detailed notebook
+
+[Open the original notebook in Colab](https://colab.research.google.com/github/raoankit72005/Network_traffic/blob/main/UNSW_NB15_Classical_ML.ipynb)
+
+`UNSW_NB15_Classical_ML.ipynb` remains available for broader exploratory plots, data audits, and test comparisons of all four refitted models. Start with the beginner version, then use the original for deeper analysis.
+
+## Results and verification
+
+Scores and plots are generated when you run the notebooks. No full-dataset benchmark scores are claimed. The beginner notebook was syntax-checked and its scikit-learn preprocessing, splitting, training, evaluation and model reload steps were smoke-tested on synthetic data. Actual UNSW-NB15 training and the Colab upload/Drive interface still require a run with your dataset.
+
+## Dataset credit
 
 Source and usage terms: https://research.unsw.edu.au/projects/unsw-nb15-dataset
 
-Dataset credit: Nour Moustafa and Jill Slay, “UNSW-NB15: a comprehensive data set for network intrusion detection systems (UNSW-NB15 network data set),” MilCIS, 2015. Dataset rights remain with its authors; refer to the official page for citation and usage requirements.
+Nour Moustafa and Jill Slay, “UNSW-NB15: a comprehensive data set for network intrusion detection systems (UNSW-NB15 network data set),” MilCIS, 2015. Dataset rights remain with its authors; consult the official page for citation and usage requirements.

@@ -37,7 +37,7 @@ These are classical models, so there is no neural-network `epochs` setting. Edit
 
 ## Evaluation and leakage prevention
 
-`label`, `attack_cat` and `id` are excluded from model inputs. `attack_cat` reveals the answer and would leak target information. Identical predictor rows stay together in the training/validation split. Imputation, scaling and encoding are fitted inside pipelines using only training data.
+`label`, `attack_cat` and `id` are excluded from model inputs. `attack_cat` reveals the answer and would leak target information. The beginner notebook uses a stratified 80/20 train_test_split of the supplied training file, with no K-fold. Duplicate inputs can appear on both sides and may inflate validation scores. Preprocessing is explicit: fill missing categories with Unknown, use pandas.get_dummies, align columns, and learn median replacements from training only. Only original numerical columns are scaled for Logistic Regression; tree models use unscaled inputs. No Pipeline or ColumnTransformer is used. The saved model bundle includes the imputer, optional scaler and feature layout; the notebook shows each reload/prediction step.
 
 The winner is chosen by validation F1, refitted on all supplied training records, and evaluated on the separate test set. Exact predictor overlap between training and test is reported, with a non-overlapping test F1 when both classes are available. Do not repeatedly tune on test scores. Offline benchmark results do not establish reliable detection on live networks or unseen attack families.
 
